@@ -1,16 +1,46 @@
+use std::collections::VecDeque;
+
 pub fn maximum_subarray_sum(nums: Vec<i32>, k: i32) -> i64 {
-    let nums_len: usize = nums.len();
-    let mut max_sum: i64 = i64::MIN;
+    let mut max_sum = 0;
+    let mut min_deque: VecDeque<usize> = VecDeque::new();
+    let mut max_deque: VecDeque<usize> = VecDeque::new();
+    let mut current_sum = 0;
 
-    for i in 0..nums_len {
-        let mut subarray_sum: i64 = 0;
+    let mut start = 0;
+    for end in 0..nums.len() {
+        current_sum += nums[end] as i64;
 
-        for j in i..nums_len {
-            subarray_sum += nums[j] as i64;
-
-            if ((nums[j] - nums[i]).abs() == k) && (subarray_sum > max_sum) {
-                max_sum = subarray_sum;
+        while let Some(&index) = min_deque.back() {
+            if nums[index] >= nums[end] {
+                min_deque.pop_back();
+            } else {
+                break;
             }
+        }
+        min_deque.push_back(end);
+
+        while let Some(&index) = max_deque.back() {
+            if nums[index] <= nums[end] {
+                max_deque.pop_back();
+            } else {
+                break;
+            }
+        }
+        max_deque.push_back(end);
+
+        while !min_deque.is_empty()
+            && !max_deque.is_empty()
+            && (nums[*max_deque.front().unwrap()] - nums[*min_deque.front().unwrap()]).abs() == k
+        {
+            max_sum = max_sum.max(current_sum);
+            if *max_deque.front().unwrap() == start {
+                max_deque.pop_front();
+            }
+            if *min_deque.front().unwrap() == start {
+                min_deque.pop_front();
+            }
+            current_sum -= nums[start] as i64;
+            start += 1;
         }
     }
 
